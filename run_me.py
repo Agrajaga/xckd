@@ -1,7 +1,4 @@
-
-import io
 import os
-from pprint import pprint
 from random import randint
 
 import requests
@@ -34,19 +31,28 @@ def get_xkcd_comic(comic_id: int) -> tuple[str, str]:
     return (comic_comment, filename)
 
 
-def call_vk_api_method(access_token: str, method: str, method_params: dict = {}) -> requests.Response:
+def call_vk_api_method(
+    access_token: str,
+    method: str,
+    method_params: dict = {}
+) -> requests.Response:
     api_params = {
         "access_token": access_token,
         "v": "5.131",
     }
     method_url = f"https://api.vk.com/method/{method}"
 
-    response = requests.get(method_url, params=api_params|method_params)
+    response = requests.get(method_url, params=api_params | method_params)
     response.raise_for_status()
     return response
 
 
-def post_vk_wall_photo(token: str, group_id: str, title: str, photo_filename: str) -> None:
+def post_vk_wall_photo(
+    token: str,
+    group_id: str,
+    title: str,
+    photo_filename: str
+) -> None:
     method_params = {
         "group_id": group_id,
     }
@@ -102,5 +108,5 @@ if __name__ == "__main__":
         title=comic_comment,
         photo_filename=comic_filename
     )
-    
+
     os.remove(comic_filename)
