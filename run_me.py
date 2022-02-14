@@ -99,14 +99,26 @@ if __name__ == "__main__":
     vk_token = os.getenv("VK_ACCESS_TOKEN")
     group_id = os.getenv("VK_GROUP_ID")
 
-    comic_id = randint(1, get_xkcd_last_num())
-    comic_comment, comic_filename = get_xkcd_comic(comic_id=comic_id)
+    try:
+        comic_id = randint(1, get_xkcd_last_num())
+        comic_comment, comic_filename = get_xkcd_comic(comic_id=comic_id)
+    except requests.exceptions.HTTPError as error:
+        print(f'An error occurred while fetching the comic: \
+                    {error.response.status_code} {error.response.reason}')
+    except requests.exceptions.Timeout:
+        print('An error occurred while fetching the comic: Timeout expired')
 
-    post_vk_wall_photo(
-        token=vk_token,
-        group_id=group_id,
-        title=comic_comment,
-        photo_filename=comic_filename
-    )
+    try:
+        post_vk_wall_photo(
+            token=vk_token,
+            group_id=group_id,
+            title=comic_comment,
+            photo_filename=comic_filename
+        )
+    except requests.exceptions.HTTPError as error:
+        print(f'An error occurred while posting the comic: \
+                    {error.response.status_code} {error.response.reason}')
+    except requests.exceptions.Timeout:
+        print('An error occurred while posting the comic: Timeout expired')
 
     os.remove(comic_filename)
