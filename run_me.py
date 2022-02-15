@@ -30,6 +30,22 @@ def fetch_xkcd_comic(comic_url: str, filename: str) -> None:
         file.write(response.content)
 
 
+class VK_error(Exception):
+    def __init__(self, code: int, message: str) -> None:
+        self.code = code
+        self.message = message
+
+    def __str__(self) -> str:
+        return f"VK error: {self.code}: {self.message}"
+
+
+def handle_vk_error(response: requests.Response) -> None:
+    content = response.json()
+    vk_error = content.get("error")
+    if vk_error:
+        raise VK_error(vk_error["error_code"], vk_error["error_msg"])
+
+
 def call_vk_api_method(
     access_token: str,
     method: str,
@@ -43,6 +59,7 @@ def call_vk_api_method(
 
     response = requests.get(method_url, params=api_params | method_params)
     response.raise_for_status()
+    handle_vk_error(response)
     return response
 
 
@@ -101,13 +118,14 @@ if __name__ == "__main__":
 
     try:
         comic_id = randint(1, get_xkcd_last_num())
-        comic_comment, comic_url = get_xkcd_comic_description(comic_id=comic_id)
+        comic_comment, comic_url = get_xkcd_comic_description(
+            comic_id=comic_id)
         fetch_xkcd_comic(comic_url=comic_url, filename=temp_filename)
     except requests.exceptions.HTTPError as error:
-        print(f'An error occurred while fetching the comic: \
-                    {error.response.status_code} {error.response.reason}')
+        print(f"An error occurred while fetching the comic: \
+                    {error.response.status_code} {error.response.reason}")
     except requests.exceptions.Timeout:
-        print('An error occurred while fetching the comic: Timeout expired')
+        print("An error occurred while fetching the comic: Timeout expired")
 
     try:
         post_vk_wall_photo(
@@ -116,10 +134,12 @@ if __name__ == "__main__":
             title=comic_comment,
             photo_filename=temp_filename
         )
+    except VK_error as error:
+        print(f"An error occurred while posting the comic: {error}")
     except requests.exceptions.HTTPError as error:
-        print(f'An error occurred while posting the comic: \
-                    {error.response.status_code} {error.response.reason}')
+        print(f"An error occurred while posting the comic: \
+                    {error.response.status_code} {error.response.reason}")
     except requests.exceptions.Timeout:
-        print('An error occurred while posting the comic: Timeout expired')
+        print("An error occurred while posting the comic: Timeout expired")
 
     os.remove(temp_filename)
