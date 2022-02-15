@@ -11,6 +11,8 @@ To run the script, type:
 ```
 $ python run_me.py
 ```
+After executing the script, you will receive a new post in the group:
+![image](https://user-images.githubusercontent.com/22379662/153935424-a6895e6a-cea7-4f1f-ae59-a881f02c3164.png)
 
 ### How to install
 
