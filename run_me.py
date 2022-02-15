@@ -12,23 +12,22 @@ def get_xkcd_last_num() -> int:
     return int(response.json()["num"])
 
 
-def get_xkcd_comic(comic_id: int) -> tuple[str, str]:
+def get_xkcd_comic_description(comic_id: int) -> tuple[str, str]:
     xkcd_url = f"https://xkcd.com/{comic_id}/info.0.json"
     response = requests.get(xkcd_url)
     response.raise_for_status()
-    comic_description = response.json()
+    response_payload = response.json()
 
-    comic_comment = comic_description["alt"]
-    comic_url = comic_description["img"]
+    comic_comment = response_payload["alt"]
+    comic_url = response_payload["img"]
+    return (comic_comment, comic_url)
 
+
+def fetch_xkcd_comic(comic_url: str, filename: str) -> None:
     response = requests.get(comic_url)
     response.raise_for_status()
-
-    filename = "tmp_img.png"
     with open(filename, "wb") as file:
         file.write(response.content)
-
-    return (comic_comment, filename)
 
 
 def call_vk_api_method(
@@ -98,10 +97,12 @@ if __name__ == "__main__":
     load_dotenv()
     vk_token = os.getenv("VK_ACCESS_TOKEN")
     group_id = os.getenv("VK_GROUP_ID")
+    temp_filename = "tmp_img.png"
 
     try:
         comic_id = randint(1, get_xkcd_last_num())
-        comic_comment, comic_filename = get_xkcd_comic(comic_id=comic_id)
+        comic_comment, comic_url = get_xkcd_comic_description(comic_id=comic_id)
+        fetch_xkcd_comic(comic_url=comic_url, filename=temp_filename)
     except requests.exceptions.HTTPError as error:
         print(f'An error occurred while fetching the comic: \
                     {error.response.status_code} {error.response.reason}')
@@ -113,7 +114,7 @@ if __name__ == "__main__":
             token=vk_token,
             group_id=group_id,
             title=comic_comment,
-            photo_filename=comic_filename
+            photo_filename=temp_filename
         )
     except requests.exceptions.HTTPError as error:
         print(f'An error occurred while posting the comic: \
@@ -121,4 +122,4 @@ if __name__ == "__main__":
     except requests.exceptions.Timeout:
         print('An error occurred while posting the comic: Timeout expired')
 
-    os.remove(comic_filename)
+    os.remove(temp_filename)
