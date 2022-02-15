@@ -141,5 +141,5 @@ if __name__ == "__main__":
                     {error.response.status_code} {error.response.reason}")
     except requests.exceptions.Timeout:
         print("An error occurred while posting the comic: Timeout expired")
-
-    os.remove(temp_filename)
+    finally:
+        os.remove(temp_filename)
