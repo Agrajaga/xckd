@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 
 def get_xkcd_last_num() -> int:
-    xkcd_url = f"https://xkcd.com/info.0.json"
+    xkcd_url = "https://xkcd.com/info.0.json"
     response = requests.get(xkcd_url)
     response.raise_for_status()
     return int(response.json()["num"])
