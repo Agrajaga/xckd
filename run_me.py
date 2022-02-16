@@ -39,8 +39,7 @@ class VK_error(Exception):
         return f"VK error: {self.code}: {self.message}"
 
 
-def handle_vk_error(response: requests.Response) -> None:
-    content = response.json()
+def handle_vk_error(content: dict) -> None:
     vk_error = content.get("error")
     if vk_error:
         raise VK_error(vk_error["error_code"], vk_error["error_msg"])
@@ -59,8 +58,9 @@ def call_vk_api_method(
 
     response = requests.get(method_url, params=api_params | method_params)
     response.raise_for_status()
-    handle_vk_error(response)
-    return response
+    content = response.json()
+    handle_vk_error(content)
+    return content
 
 
 def post_vk_wall_photo(
@@ -72,12 +72,12 @@ def post_vk_wall_photo(
     method_params = {
         "group_id": group_id,
     }
-    response = call_vk_api_method(
+    answer = call_vk_api_method(
         access_token=token,
         method="photos.getWallUploadServer",
         method_params=method_params
     )
-    upload_url = response.json()["response"]["upload_url"]
+    upload_url = answer["response"]["upload_url"]
 
     with open(photo_filename, "rb") as file:
         files = {
@@ -87,13 +87,13 @@ def post_vk_wall_photo(
         response.raise_for_status()
 
     method_params.update(response.json())
-    response = call_vk_api_method(
+    answer = call_vk_api_method(
         access_token=token,
         method="photos.saveWallPhoto",
         method_params=method_params
     )
 
-    save_photo_response = response.json()["response"][0]
+    save_photo_response = answer["response"][0]
     owner_id = save_photo_response["owner_id"]
     photo_id = save_photo_response["id"]
 
@@ -103,7 +103,7 @@ def post_vk_wall_photo(
         "message": title,
         "attachments": f"photo{owner_id}_{photo_id}",
     }
-    response = call_vk_api_method(
+    answer = call_vk_api_method(
         access_token=token,
         method="wall.post",
         method_params=method_params
