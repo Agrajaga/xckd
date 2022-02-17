@@ -49,7 +49,7 @@ def call_vk_api_method(
     access_token: str,
     method: str,
     method_params: dict = {}
-) -> requests.Response:
+) -> dict:
     api_params = {
         "access_token": access_token,
         "v": "5.131",
